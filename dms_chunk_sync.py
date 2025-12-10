@@ -226,7 +226,7 @@ def download_torrent_magnet(download_link, file_name_hint):
     Minimal torrent download using libtorrent.
     """
     try:
-        import libtorrent as lt
+        import libtorrent as lt # type: ignore
     except ImportError:
         raise RuntimeError("libtorrent not installed; torrent mode not available on VPS.")
 
