@@ -1,1 +1,18 @@
+# Run the consumer (downloads chunks from DMS, verifies checksums, merges files)
 python3 dms_chunk_sync.py --mode consumer
+
+# Run the producer (run on VPS to download/origin file, split into chunks and upload to DMS)
+python3 dms_chunk_sync.py --mode producer
+
+# Merge locally using the manifest (verifies checksums before merging).
+# Defaults: --manifest manifest.txt, --chunks-dir chunks, --output-dir .
+python3 merge_chunks.py --manifest manifest.txt --chunks-dir chunks --output-dir .
+
+# Quick merge using defaults (manifest.txt in current dir, chunks/ folder)
+python3 merge_chunks.py
+
+# Recommended: use a virtual environment and install dependencies if needed
+python3 -m venv venv
+source venv/bin/activate
+pip install requests
+
