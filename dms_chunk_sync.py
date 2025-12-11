@@ -425,6 +425,27 @@ def producer_mode():
         local_chunk_path = os.path.join(chunks_dir, fname)
         remote_chunk_url = remote_chunks_url + fname
 
+        # Before uploading, ensure DMS has enough free space for this chunk.
+        chunk_size = os.path.getsize(local_chunk_path)
+        while True:
+            counter = 0
+            used_dms, avail_dms = get_dms_quota(login_detail)
+            # If we couldn't determine DMS quota, warn and proceed with upload
+            if avail_dms < 0:
+                print(f"Warning: could not determine DMS free space; proceeding to upload {fname}.")
+                break
+            if avail_dms >= chunk_size:
+                # Enough space — proceed to upload
+                break
+            # Not enough space — wait for consumer to delete chunks
+            if counter % 5 == 0:
+                print(
+                    f"Not enough DMS space to upload {fname}: need {chunk_size/1e9:.2f} GB, "
+                    f"available {avail_dms/1e9:.2f} GB. Waiting for consumer to free space..."
+                )
+            time.sleep(10)
+            counter += 1
+
         # Upload
         dms_upload_file(login_detail, local_chunk_path, remote_chunk_url, fname)
 
