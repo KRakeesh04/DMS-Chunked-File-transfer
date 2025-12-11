@@ -516,29 +516,43 @@ def consumer_mode():
 
     print("\nAll chunks downloaded and verified. Merging...")
 
-    # Step 3: Merge
-    if chunk_files:
-        first = chunk_files[0]
-        if ".part" in first:
-            out_name = first.split(".part")[0]
-        else:
-            out_name = "output_merged"
-    else:
+    # Step 3: Merge - group chunks by base filename
+    if not chunk_files:
         print("No chunks in manifest. Nothing to merge.")
         return
 
-    output_path = out_name
-    with open(output_path, "wb") as out_f:
-        for fname in chunk_files:
-            chunk_path = os.path.join(CHUNKS_DIR_LOCAL, fname)
-            with open(chunk_path, "rb") as in_f:
-                while True:
-                    data = in_f.read(1024 * 1024)
-                    if not data:
-                        break
-                    out_f.write(data)
-
-    print(f"Merged file written to: {output_path}")
+    # Group chunks by base filename (e.g., super.zip, supernatural_S03.zip)
+    chunk_groups = {}
+    for fname in chunk_files:
+        if ".part" in fname:
+            base_name = fname.rsplit(".part", 1)[0]
+        else:
+            base_name = fname
+        
+        if base_name not in chunk_groups:
+            chunk_groups[base_name] = []
+        chunk_groups[base_name].append(fname)
+    
+    # Sort chunks in each group
+    for base_name in chunk_groups:
+        chunk_groups[base_name].sort()
+    
+    # Merge each group separately
+    for base_name, group_files in chunk_groups.items():
+        output_path = base_name
+        print(f"\nMerging {len(group_files)} chunks into: {output_path}")
+        
+        with open(output_path, "wb") as out_f:
+            for fname in group_files:
+                chunk_path = os.path.join(CHUNKS_DIR_LOCAL, fname)
+                with open(chunk_path, "rb") as in_f:
+                    while True:
+                        data = in_f.read(1024 * 1024)
+                        if not data:
+                            break
+                        out_f.write(data)
+        
+        print(f"✓ Merged file written to: {output_path}")
 
     # Cleanup on laptop
     shutil.rmtree(CHUNKS_DIR_LOCAL, ignore_errors=True)
