@@ -575,6 +575,9 @@ def consumer_mode():
         
         print(f"✓ Merged file written to: {output_path}")
 
+    # Cleanup on DMS: delete manifest
+    dms_delete(login_detail, remote_manifest_url, label=MANIFEST_NAME)
+
     # Cleanup on laptop
     shutil.rmtree(CHUNKS_DIR_LOCAL, ignore_errors=True)
     try:
